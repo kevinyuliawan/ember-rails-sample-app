@@ -4,6 +4,11 @@ class ListsController < ApplicationController
     begin
       lists_res = @mc.lists.list
       @lists = lists_res['data']
+      #if responding to html or .json (json used by ember)
+      respond_to do |format|
+        format.html
+        format.json { render :json => @lists }
+      end
     rescue Mailchimp::Error => ex
       if ex.message
         flash[:error] = ex.message
@@ -21,6 +26,11 @@ class ListsController < ApplicationController
       @list = lists_res['data'][0]
       members_res = @mc.lists.members(list_id)
       @members = members_res['data']
+      #if responding to html or .json (json used by ember)
+      respond_to do |format|
+        format.html
+        format.json { render :json => @members }
+      end
     rescue Mailchimp::ListDoesNotExistError
       flash[:error] = "The list could not be found"
       redirect_to "/lists/"
@@ -39,7 +49,8 @@ class ListsController < ApplicationController
     email = params['email']
     begin
       @mc.lists.subscribe(params[:id], {'email' => email})
-      flash[:success] = "#{email} subscribed successfully"
+      #flash[:success] = "#{email} subscribed successfully"
+      #need to return success to the ajax call
     rescue Mailchimp::ListAlreadySubscribedError
       flash[:error] = "#{email} is already subscribed to the list"
     rescue Mailchimp::ListDoesNotExistError
@@ -53,7 +64,7 @@ class ListsController < ApplicationController
         flash[:error] = "An unknown error occurred"
       end
     end
-    redirect_to "/lists/#{list_id}"
+    head :found
   end
 
 end
